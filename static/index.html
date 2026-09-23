@@ -1,0 +1,691 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>FaheS — مساعد شراء السيارة</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#060f0c;
+  --bg2:#0a1813;
+  --card:#12231c;
+  --card2:#163028;
+  --line:#2a4a3d;
+  --line2:#3d6b58;
+  --lime:#d4e54a;
+  --lime2:#b8c93a;
+  --text:#f2faf5;
+  --muted:#9fb5aa;
+  --warn-bg:#2e2814;
+  --warn-border:#6b5c2e;
+  --good-bg:#143528;
+  --good-border:#2f6b4a;
+  --shadow:0 8px 32px rgba(0,0,0,.35);
+  --radius:20px;
+  --font:"Cairo",Calibri,Arial,sans-serif;
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{
+  margin:0;
+  background:radial-gradient(1200px 600px at 80% -10%,#143528 0%,transparent 55%),
+             radial-gradient(900px 500px at -10% 40%,#1a2e24 0%,transparent 50%),
+             var(--bg);
+  color:var(--text);
+  font-family:var(--font);
+  font-size:18px;
+  line-height:1.75;
+  min-height:100vh;
+}
+.wrap{max-width:1080px;margin:0 auto;padding:28px 22px 48px}
+.top{
+  display:flex;justify-content:space-between;align-items:center;gap:16px;
+  margin-bottom:8px;padding-bottom:18px;border-bottom:1px solid var(--line);
+}
+.logo{
+  font-size:42px;font-weight:900;letter-spacing:-.5px;
+  text-shadow:0 2px 20px rgba(212,229,74,.25);
+}
+.logo span{color:var(--lime)}
+#subtitle{font-size:17px;margin-top:4px;color:var(--muted)}
+.lang{
+  width:auto!important;min-width:130px;
+  background:linear-gradient(145deg,#1e3a2e,#152820);
+  color:#fff;border:1px solid var(--line2);
+  border-radius:12px;padding:12px 18px;font-size:16px;font-weight:700;
+  cursor:pointer;transition:.2s;
+}
+.lang:hover{border-color:var(--lime);transform:translateY(-1px)}
+.card{
+  background:linear-gradient(160deg,var(--card) 0%,var(--card2) 100%);
+  border:1px solid var(--line);
+  border-radius:var(--radius);
+  padding:28px 26px;
+  margin:22px 0;
+  box-shadow:var(--shadow);
+  transition:border-color .2s;
+}
+.card:hover{border-color:var(--line2)}
+.card h2{
+  margin:0 0 10px;
+  font-size:26px;font-weight:800;
+  color:var(--text);
+  letter-spacing:-.3px;
+}
+.card h3{font-size:20px;margin:18px 0 10px;color:var(--lime)}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:18px 16px}
+label{
+  display:block;margin:0 0 8px;
+  font-weight:700;font-size:16px;color:var(--muted);
+}
+input,select,button{
+  width:100%;
+  padding:15px 16px;
+  border-radius:14px;
+  border:1px solid var(--line);
+  background:#0a1612;
+  color:var(--text);
+  font:inherit;
+  font-size:18px;
+  transition:border-color .2s,box-shadow .2s;
+}
+input:focus,select:focus{
+  outline:none;
+  border-color:var(--lime);
+  box-shadow:0 0 0 3px rgba(212,229,74,.18);
+}
+input::placeholder{color:#5a7568;font-size:16px}
+select{
+  cursor:pointer;
+  appearance:none;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%9fb5aa' d='M1 1l5 5 5-5'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;
+  background-position:left 14px center;
+  padding-left:36px;
+}
+button{
+  background:linear-gradient(145deg,var(--lime),var(--lime2));
+  color:#0d1a12;
+  border:0;
+  font-weight:800;
+  font-size:19px;
+  cursor:pointer;
+  margin-top:16px;
+  min-height:54px;
+  box-shadow:0 4px 18px rgba(212,229,74,.28);
+  transition:transform .15s,box-shadow .15s,filter .15s;
+}
+button:hover{filter:brightness(1.06);transform:translateY(-2px);box-shadow:0 6px 24px rgba(212,229,74,.38)}
+button:active{transform:translateY(0)}
+button:disabled{opacity:.6;cursor:wait;transform:none}
+.secondary{
+  background:linear-gradient(145deg,#1e3a2e,#152820);
+  color:#fff;
+  border:1px solid var(--line2);
+  box-shadow:none;
+}
+.notice{
+  padding:18px 20px;
+  border-radius:14px;
+  background:var(--warn-bg);
+  border:1px solid var(--warn-border);
+  margin-top:16px;
+  line-height:1.85;
+  font-size:17px;
+}
+.notice.good{
+  background:var(--good-bg);
+  border-color:var(--good-border);
+}
+.result{
+  padding:16px 18px;
+  border:1px solid var(--line);
+  border-radius:14px;
+  margin:12px 0;
+  background:rgba(0,0,0,.2);
+  font-size:17px;
+  transition:border-color .2s;
+}
+.result:hover{border-color:var(--line2)}
+.result b{font-size:18px}
+.pill{
+  display:inline-block;
+  padding:6px 12px;
+  border-radius:20px;
+  background:#1a3329;
+  border:1px solid var(--line);
+  margin:4px 3px;
+  font-size:15px;
+  font-weight:600;
+  color:var(--lime);
+}
+.muted{color:var(--muted);font-size:16px;line-height:1.7}
+.value{font-size:28px;color:var(--lime);font-weight:900}
+a{color:var(--lime);font-weight:700;text-decoration:none}
+a:hover{text-decoration:underline}
+#urlAnalyzerSection input{
+  direction:ltr!important;
+  text-align:left!important;
+  font-size:17px;
+}
+#urlStatus{margin-top:12px;font-size:16px;line-height:1.8}
+.hidden{display:none}
+@media(max-width:720px){
+  body{font-size:17px}
+  .wrap{padding:16px 14px 36px}
+  .grid{grid-template-columns:1fr}
+  .logo{font-size:34px}
+  .card{padding:22px 18px}
+  .card h2{font-size:22px}
+  input,select,button{font-size:17px;padding:14px}
+  .top{align-items:flex-start}
+}
+</style>
+
+<style id="premium-ui">
+.plan-bar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;justify-content:space-between;margin:12px 0 4px}
+.plan-badge{display:inline-flex;align-items:center;gap:8px;padding:8px 14px;border-radius:999px;font-size:15px;font-weight:700;border:1px solid var(--line)}
+.plan-badge.free{background:#1a2a22;color:var(--muted)}
+.plan-badge.prem{background:linear-gradient(135deg,#3d4a12,#2a3a18);color:var(--lime);border-color:#6a7a28}
+.plan-actions{display:flex;gap:8px;flex-wrap:wrap}
+.plan-actions button{width:auto;margin:0;min-height:42px;padding:10px 16px;font-size:15px}
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:10000;display:flex;align-items:center;justify-content:center;padding:16px}
+.modal{background:var(--card);border:1px solid var(--line2);border-radius:20px;max-width:520px;width:100%;padding:26px;box-shadow:var(--shadow);max-height:90vh;overflow:auto}
+.modal h2{margin:0 0 12px;font-size:24px}
+.price-card{border:1px solid var(--line);border-radius:14px;padding:14px 16px;margin:10px 0;cursor:pointer;transition:.15s}
+.price-card:hover,.price-card.active{border-color:var(--lime);background:rgba(212,229,74,.06)}
+.price-card .p{font-size:22px;font-weight:900;color:var(--lime)}
+.locked{opacity:.85;position:relative}
+.lock-note{font-size:15px;color:var(--muted);margin-top:8px}
+</style>
+
+</head>
+<body>
+
+<div class="wrap">
+<div class="top"><div><div class="logo">Fah<span>eS</span> 🚗</div><div class="muted" id="subtitle"></div></div><button class="lang" onclick="toggleLang()" id="langBtn">English 🇬🇧</button></div>
+<div class="plan-bar" id="planBar">
+  <div class="plan-badge free" id="planBadge">مجاني · تحليلان/يوم</div>
+  <div class="plan-actions">
+    <button type="button" class="secondary" onclick="openPremiumModal()">💎 Premium</button>
+    <button type="button" class="secondary" onclick="openActivateModal()">🔑 تفعيل رمز</button>
+  </div>
+</div>
+
+
+
+
+
+
+
+
+<section id="urlAnalyzerSection" class="card url-section" style="display:block!important;visibility:visible!important;opacity:1!important;">
+  <h2>🔗 تحليل إعلان من الرابط أو يدوياً</h2>
+  <p class="muted">الصق رابط Ouedkniss للقراءة التلقائية، أو املأ بيانات أي إعلان (من أي موقع أو فيسبوك) في الحقول أدناه ثم اضغط تحليل الإعلان.</p>
+  <input id="adUrl" type="url" placeholder="https://www.ouedkniss.com/..." style="width:100%;box-sizing:border-box;padding:12px;border-radius:10px;margin:8px 0;">
+  <button id="urlAnalyzeBtn" type="button" class="primary" style="width:100%;min-height:46px;">🔗 قراءة الإعلان من الرابط</button>
+  <div id="urlStatus" class="muted"></div>
+</section>
+
+
+<div class="card">
+<h2 id="formTitle"></h2>
+<div class="grid">
+<div><label id="lBrand"></label><input id="brand" value=""></div>
+<div><label id="lModel"></label><input id="model" value=""></div>
+<div><label id="lTrim"></label><input id="trim" value=""></div>
+<div><label id="lYear"></label><input id="year" type="number" value=""></div>
+<div><label id="lEngine"></label><input id="engine" value=""></div>
+<div><label id="lFuel"></label><input id="fuel" value=""></div>
+<div><label id="lGear"></label><input id="gear" value=""></div>
+<div><label id="lKm"></label><input id="km" type="number" value=""></div>
+<div><label id="lPrice"></label><input id="price" type="number" value=""></div>
+</div>
+<button onclick="analyze()" id="analyzeBtn"></button>
+<div id="report"></div>
+</div>
+
+<div id="altCard" class="card">
+<h2 id="altTitle"></h2>
+<div class="grid">
+<div><label id="lRange"></label><select id="range"><option value="same"></option><option value="lower"></option><option value="higher"></option><option value="both"></option></select></div>
+<div><label id="lType"></label><select id="altType"><option value="same"></option><option value="class"></option></select></div>
+</div>
+<button onclick="alternatives()" id="altBtn"></button><div id="alts"></div>
+</div>
+
+<div class="card" id="carSearchCard">
+<h2 id="liveTitle">🔎 ابحث عن السيارة التي تريد</h2>
+<p class="muted" id="liveText">أدخل المواصفات (الاسم، السعر، الولاية، الوقود). المصدر الرئيسي: إعلانات Ouedkniss الحقيقية — ولأي إعلان من موقع آخر املأ البيانات يدوياً أعلاه.</p>
+<div class="grid">
+  <div>
+    <label id="lSearchCar">اسم السيارة / الموديل</label>
+    <input id="liveQuery" type="text" placeholder="مثال: Peugeot 207 أو Renault Clio">
+  </div>
+  <div>
+    <label id="lSearchYear">السنة (اختياري)</label>
+    <input id="searchYear" type="number" placeholder="مثال: 2015" min="1990" max="2030">
+  </div>
+  <div>
+    <label id="lMinPrice">السعر من (مليون)</label>
+    <input id="minPrice" type="number" placeholder="250" min="0" step="1">
+  </div>
+  <div>
+    <label id="lMaxPrice">السعر إلى (مليون)</label>
+    <input id="maxPrice" type="number" placeholder="350" min="0" step="1">
+  </div>
+  <div>
+    <label id="lWilaya">الولاية</label>
+    <select id="searchWilaya"><option value="">كل الولايات</option></select>
+  </div>
+  <div>
+    <label id="lFuelFilter">نوع الوقود</label>
+    <select id="searchFuel">
+      <option value="">الكل</option>
+      <option value="essence">بنزين / Essence</option>
+      <option value="diesel">ديزل / Diesel</option>
+      <option value="gpl">GPL</option>
+      <option value="hybrid">هجين / Hybrid</option>
+      <option value="electric">كهربائي / Electric</option>
+    </select>
+  </div>
+</div>
+<button onclick="liveSearch()" id="liveBtn">🔎 ابحث عن السيارة</button>
+<div id="live"></div>
+</div>
+</div>
+
+
+<div id="premiumModal" class="modal-bg" style="display:none" onclick="if(event.target===this)closeModals()">
+  <div class="modal">
+    <h2>💎 FaheS Premium</h2>
+    <p class="muted" id="premiumIntro">ادفع عبر Chargily ( الذهبية / CIB ) وفعّل تلقائياً.</p>
+    <div class="price-card" data-plan="single">
+      <div><b>تحليل واحد كامل</b></div><div class="p">150 دج</div>
+      <button type="button" style="margin-top:10px" onclick="startPay('single')">💳 ادفع الآن</button>
+    </div>
+    <div class="price-card" data-plan="weekly">
+      <div><b>اشتراك أسبوعي</b></div><div class="p">300 دج</div>
+      <button type="button" style="margin-top:10px" onclick="startPay('weekly')">💳 ادفع الآن</button>
+    </div>
+    <div class="price-card" data-plan="monthly">
+      <div><b>اشتراك شهري</b></div><div class="p">900 دج</div>
+      <button type="button" style="margin-top:10px" onclick="startPay('monthly')">💳 ادفع الآن</button>
+    </div>
+    <p class="muted" style="margin-top:12px">✅ مقارنة أوسع · 🔎 بدائل · ⚠️ كشف تناقضات · 📄 تقرير للحفظ</p>
+    <p class="muted">أو لديك رمز تفعيل؟ <a href="#" onclick="closeModals();openActivateModal();return false">أدخله هنا</a></p>
+    <div id="payStatus" class="muted" style="margin-top:8px"></div>
+    <button type="button" class="secondary" onclick="closeModals()">إغلاق</button>
+  </div>
+</div>
+<div id="activateModal" class="modal-bg" style="display:none" onclick="if(event.target===this)closeModals()">
+  <div class="modal">
+    <h2>🔑 تفعيل الرمز</h2>
+    <p class="muted">الصق رمز التفعيل الذي استلمته بعد الدفع</p>
+    <input id="activateCode" placeholder="FH-XXXXXX-XXXX" style="margin:10px 0">
+    <button type="button" onclick="activateCode()">تفعيل</button>
+    <button type="button" class="secondary" onclick="closeModals()">إلغاء</button>
+    <div id="activateStatus" class="muted" style="margin-top:10px"></div>
+  </div>
+</div>
+
+<script>
+const $=id=>document.getElementById(id);
+const subtitle=$("subtitle"),formTitle=$("formTitle"),langBtn=$("langBtn"),
+analyzeBtn=$("analyzeBtn"),altTitle=$("altTitle"),altBtn=$("altBtn"),
+liveTitle=$("liveTitle"),liveText=$("liveText"),liveBtn=$("liveBtn"),
+brand=$("brand"),model=$("model"),trim=$("trim"),year=$("year"),
+engine=$("engine"),fuel=$("fuel"),gear=$("gear"),km=$("km"),price=$("price"),
+range=$("range"),altType=$("altType"),report=$("report"),alts=$("alts"),
+liveQuery=$("liveQuery"),live=$("live");
+let lang="ar";
+const T={
+ar:{dir:"rtl",sub:"مساعدك قبل شراء السيارة",form:"📋 بيانات الإعلان",brand:"الماركة",model:"الموديل",trim:"الفئة",year:"السنة",engine:"المحرك",fuel:"الطاقة",gear:"ناقل الحركة",km:"الكيلومترات كما في الإعلان",price:"السعر (مليون سنتيم)",analyze:"🔍 تحليل الإعلان",alt:"🔎 بدائل ضمن نفس الميزانية",range:"نطاق السعر",type:"نوع البدائل",find:"🚘 ابحث عن البدائل",same:"نفس السعر",lower:"أقل بقليل (-10%)",higher:"أعلى بقليل (+10%)",both:"أقل وأعلى (±10%)",sameModel:"نفس الموديل",sameClass:"نفس الفئة",live:"🔎 ابحث عن السيارة التي تريد",liveText:"أدخل اسم السيارة ونطاق السعر (بالمليون)، وسيبحث الموقع في إعلانات Ouedkniss الحقيقية.",liveBtn:"🔎 ابحث عن السيارة",searchCar:"اسم السيارة / الموديل",searchYear:"السنة (اختياري)",minPrice:"السعر من (مليون)",maxPrice:"السعر إلى (مليون)"},
+en:{dir:"ltr",sub:"Your assistant before buying a car",form:"📋 Listing details",brand:"Brand",model:"Model",trim:"Trim",year:"Year",engine:"Engine",fuel:"Fuel",gear:"Transmission",km:"Mileage as written",price:"Price (million centimes)",analyze:"🔍 Analyze listing",alt:"🔎 Alternatives in the same budget",range:"Price range",type:"Alternative type",find:"🚘 Find alternatives",same:"Same price",lower:"Slightly lower (-10%)",higher:"Slightly higher (+10%)",both:"Lower and higher (±10%)",sameModel:"Same model",sameClass:"Same class",live:"🔎 Find the car you want",liveText:"Enter the car name and price range (in millions). The site searches real Ouedkniss listings.",liveBtn:"🔎 Search for car",searchCar:"Car name / model",searchYear:"Year (optional)",minPrice:"Price from (M)",maxPrice:"Price to (M)"}
+};
+function tr(k){return T[lang][k]}
+function apply(){
+document.documentElement.lang=lang;document.documentElement.dir=tr("dir");
+subtitle.textContent=tr("sub");formTitle.textContent=tr("form");
+[["lBrand","brand"],["lModel","model"],["lTrim","trim"],["lYear","year"],["lEngine","engine"],["lFuel","fuel"],["lGear","gear"],["lKm","km"],["lPrice","price"],["lRange","range"],["lType","type"]].forEach(x=>document.getElementById(x[0]).textContent=tr(x[1]));
+analyzeBtn.textContent=tr("analyze");altTitle.textContent=tr("alt");altBtn.textContent=tr("find");liveTitle.textContent=tr("live");liveText.textContent=tr("liveText");liveBtn.textContent=tr("liveBtn");
+const sc=$("lSearchCar"),sy=$("lSearchYear"),smin=$("lMinPrice"),smax=$("lMaxPrice");
+if(sc)sc.textContent=tr("searchCar");if(sy)sy.textContent=tr("searchYear");if(smin)smin.textContent=tr("minPrice");if(smax)smax.textContent=tr("maxPrice");
+range.options[0].text=tr("same");range.options[1].text=tr("lower");range.options[2].text=tr("higher");range.options[3].text=tr("both");
+altType.options[0].text=tr("sameModel");altType.options[1].text=tr("sameClass");
+langBtn.textContent=lang==="ar"?"English 🇬🇧":"العربية 🇩🇿";
+}
+function toggleLang(){lang=lang==="ar"?"en":"ar";apply()}
+function smartKm(y,r){let age=new Date().getFullYear()-y;if(r>0&&r<1000&&age>=12)return[r*1000,true];if(r>0&&r<500&&age>=8)return[r*1000,true];return[r,false]}
+async function analyze(){
+let y=+year.value,r=+km.value,p=+price.value;
+if(!model.value || !y || !p){report.innerHTML='<div class="notice">⚠️ '+(lang==="ar"?"أدخل الموديل والسنة والسعر أولاً.":"Enter model, year and price first.")+'</div>';return;}
+let [k,fix]=smartKm(y,r);
+report.innerHTML='<div class="notice">'+(lang==="ar"?"🌐 جارٍ تحليل السيارة الحالية ومقارنتها بإعلانات Ouedkniss الحقيقية...":"🌐 Analyzing the current car against real Ouedkniss listings...")+'</div>';
+try{
+ let quota=await consumeAnalysis();
+ const sourceUrl=(document.getElementById('adUrl')?.value||'').trim();
+ const u='/api/valuation?brand='+encodeURIComponent(brand.value)+'&model='+encodeURIComponent(model.value)+'&year='+encodeURIComponent(year.value)+'&price='+encodeURIComponent(p)+'&engine='+encodeURIComponent(engine.value)+'&fuel='+encodeURIComponent(fuel.value)+'&km='+encodeURIComponent(k)+'&source_url='+encodeURIComponent(sourceUrl);
+ const resp=await fetch(u,{headers:{"X-Device-Id":deviceId()}}); let d; try{d=await resp.json()}catch(_){throw new Error('HTTP '+resp.status)}; if(!resp.ok||!d.ok) throw new Error((d&&d.error)||('HTTP '+resp.status));
+ let html=`<div class="notice ${fix?"":"good"}">${fix?(lang==="ar"?`⚠️ تم تفسير ${r.toLocaleString()} km على أنها ${k.toLocaleString()} km بسبب عمر السيارة.`:`⚠️ ${r.toLocaleString()} km was interpreted as ${k.toLocaleString()} km because of the vehicle's age.`):(lang==="ar"?`📏 الكيلومترات المستخدمة: ${k.toLocaleString()} km`:`📏 Mileage used: ${k.toLocaleString()} km`)}</div>`;
+ html+=`<div class="result"><b>${lang==="ar"?"السيارة محل التحليل":"Vehicle analyzed"}:</b> ${brand.value} ${model.value} ${trim.value||""} — ${y}<br><span class="pill">${p} M</span>${r?`<span class="pill">${k.toLocaleString()} km</span>`:`<span class="pill">${lang==="ar"?"الكيلومترات غير متوفرة":"Mileage unavailable"}</span>`}</div>`;
+ if(d.reference!=null){
+   const diff=d.difference_pct==null?"":`${d.difference_pct>0?"+":""}${d.difference_pct.toFixed(1)}%`;
+   html+=`<div class="notice good"><b>${lang==="ar"?"السعر المرجعي من الإعلانات المماثلة":"Reference price from comparable listings"}:</b> ${d.reference} ${lang==="ar"?"مليون":"M"}<br><b>${lang==="ar"?"النطاق بعد استبعاد الأسعار الشاذة":"Filtered market range"}:</b> ${d.min}–${d.max} M<br><b>${lang==="ar"?"أساس المقارنة":"Comparison basis"}:</b> ${d.tier_text||""}<br><b>${lang==="ar"?"النتيجة":"Assessment"}:</b> ${d.verdict||""} ${diff?`(${diff})`:""}<br><small>${lang==="ar"?`اعتمدنا على ${d.count} إعلانًا مشابهًا حقيقيًا.`:`Based on ${d.count} real comparable listings.`}</small></div>`;
+ }else{
+   html+=`<div class="notice">${lang==="ar"?"لم نجد عددًا كافيًا من الإعلانات المماثلة الحقيقية لإعطاء سعر مرجعي. لن نستخدم بيانات تجريبية حتى لا نعطيك نتيجة خاطئة.":"Not enough real comparable listings were found, so no reference price is shown. We won't use demo data and risk giving you a wrong result."}</div>`;
+ }
+ /* comparable ads hidden by design */
+ if(quota && (quota.tier==='premium'||quota.tier==='single')){
+   let notes=d.anomalies||[];
+   if(!notes.length && d.reference!=null && d.difference_pct!=null){
+     const dp=d.difference_pct;
+     notes=[{text: (lang==='ar'
+       ? (Math.abs(dp)>=15
+          ? `ملاحظة سعر: الفرق عن المرجع حوالي ${dp>0?'+':''}${dp.toFixed(1)}% (المرجع ${d.reference} M).`
+          : `ملاحظة سعر: قريب من المرجع (${d.reference} M) بفرق ${dp>0?'+':''}${dp.toFixed(1)}%.`)
+       : `Price note: about ${dp>0?'+':''}${dp.toFixed(1)}% vs reference ${d.reference} M.`)}];
+   }
+   if(!notes.length){
+     notes=[{text: lang==='ar'
+       ? 'ملاحظة: راجع الوثائق وافحص السيارة عند ميكانيكي قبل الشراء.'
+       : 'Note: check documents and have a mechanic inspect before buying.'}];
+   }
+   html+=anomaliesHtml(notes,lang);
+   html+=sellerQuestionsHtml(lang);
+   html+=saveReportBtn();
+ } else if(quota && quota.tier==='free'){
+   html+=`<div class="notice" style="margin-top:12px">💎 <b>${lang==='ar'?'مع Premium تحصل على:':'With Premium you get:'}</b><ul style="margin:8px 0 0 18px;line-height:1.9">
+   <li>${lang==='ar'?'ملاحظات وكشف تناقضات (سعر/كيلومترات غير منطقية)':'Notes and anomaly detection (odd price/mileage)'}</li>
+   <li>${lang==='ar'?'أسئلة جاهزة لطرحها على صاحب الإعلان قبل الشراء':'Ready questions to ask the seller before buying'}</li>
+   <li>${lang==='ar'?'البحث عن البدائل + البحث عن السيارة التي تريد':'Alternatives search + find the car you want'}</li>
+   <li>${lang==='ar'?'تقرير كامل قابل للحفظ':'Full report you can save'}</li>
+   </ul>
+   <button type="button" style="width:auto;margin-top:10px" onclick="openPremiumModal()">💎 ${lang==='ar'?'ترقية إلى Premium':'Upgrade to Premium'}</button>
+   </div>`;
+ }
+ report.innerHTML=html;
+ await refreshPlan();
+}catch(e){
+  const msg=String(e&&e.message?e.message:e);
+  report.innerHTML='<div class="notice">⚠️ '+(lang==="ar"?"تعذر إكمال التحليل.":"Analysis failed.")+' <small style="display:block;margin-top:8px;opacity:.9">('+msg+')</small><br><small class="muted">'+(lang==="ar"?"إن استمر الخطأ: أعد تشغيل السيرفر وتأكد أنك متصل بالإنترنت، أو جرّب موديلًا آخر.":"If it continues: restart the server, check internet, or try another model.")+'</small></div>';
+}
+}
+async function alternatives(){
+let p=+price.value,mode=range.value,typ=altType.value;
+if(!model.value){alts.innerHTML='<div class="notice">⚠️ '+(lang==="ar"?"أدخل الموديل أولًا.":"Enter the model first.")+'</div>';return;}
+if(!p){alts.innerHTML='<div class="notice">⚠️ '+(lang==="ar"?"أدخل السعر أولًا.":"Enter the price first.")+'</div>';return;}
+await refreshPlan();
+if(!hasPaidAccess()){
+  alts.innerHTML='<div class="notice">🔒 '+(lang==="ar"?"البحث عن البدائل متاح بعد الدفع. اشترك Premium أو اشترِ تحليلاً.":"Alternatives is available after payment.")+'</div>';
+  openPremiumModal();
+  return;
+}
+alts.innerHTML='<div class="notice">'+(lang==="ar"?"🌐 جارٍ البحث في إعلانات Ouedkniss الحقيقية...":"🌐 Searching real Ouedkniss listings...")+'</div>';
+try{
+let source=document.getElementById('adUrl')?.value.trim()||'';
+let u='/api/alternatives?brand='+encodeURIComponent(brand.value)+'&model='+encodeURIComponent(model.value)+'&year='+encodeURIComponent(year.value)+'&price='+encodeURIComponent(p)+'&range='+encodeURIComponent(mode)+'&type='+encodeURIComponent(typ)+'&source_url='+encodeURIComponent(source);
+let r=await fetch(u,{headers:{"X-Device-Id":deviceId()}});
+let d=await r.json();
+if(r.status===402 || d.need_premium){
+  alts.innerHTML='<div class="notice">🔒 '+(d.error||(lang==="ar"?"هذه الميزة تتطلب Premium.":"Premium required."))+'</div>';
+  openPremiumModal();
+  return;
+}
+if(!r.ok || d.ok===false) throw new Error(d.error||('HTTP '+r.status));
+let header=lang==="ar"?`<div class="notice good">✅ ${d.ads.length} ${d.ads.length===1?'إعلان':'إعلانات'} حقيقية من Ouedkniss</div>`:`<div class="notice good">✅ ${d.ads.length} real Ouedkniss listings</div>`;
+if(!d.ads.length){
+  let tip=lang==="ar"
+    ?"لم نجد إعلانات ضمن النطاق المختار. جرّب: نطاق «أقل وأعلى»، أو «نفس الموديل»، أو غيّر السعر قليلاً."
+    :"No listings in this range. Try «Lower and higher», «Same model», or adjust the price.";
+  alts.innerHTML=header+`<div class="notice">${tip}</div>`;
+  return;
+}
+alts.innerHTML=header+d.ads.map(a=>`<div class="result"><b>${a.title||''}</b><br>${a.price!=null?`<span class="pill">${a.price} M</span>`:''}${a.km!=null?`<span class="pill">${Number(a.km).toLocaleString()} km</span>`:''}${a.year?`<span class="pill">${a.year}</span>`:''}<br><a href="${a.url}" target="_blank" rel="noopener" style="color:#c9d83b">${lang==="ar"?"فتح الإعلان ↗":"Open listing ↗"}</a></div>`).join('');
+}catch(e){
+  const msg=String(e&&e.message?e.message:e);
+  alts.innerHTML='<div class="notice">⚠️ '+(lang==="ar"?"تعذر إكمال البحث عن البدائل.":"Could not complete alternatives search.")+' <small>('+msg+')</small></div>';
+}
+}
+async function liveSearch(){
+  await refreshPlan();
+  if(!hasPaidAccess()){
+    live.innerHTML=`<div class="notice">🔒 ${lang==="ar"?"البحث عن السيارة متاح بعد الاشتراك Premium أو شراء تحليل.":"Car search is available after Premium or a paid analysis."}</div>`;
+    openPremiumModal();
+    return;
+  }
+  let q=liveQuery.value.trim();
+  let y=($("searchYear")?.value||"").trim();
+  let minP=($("minPrice")?.value||"").trim();
+  let maxP=($("maxPrice")?.value||"").trim();
+  let wilaya=($("searchWilaya")?.value||"").trim();
+  let fuel=($("searchFuel")?.value||"").trim();
+  if(y) q=(q+" "+y).trim();
+  if(!q && !minP && !maxP && !wilaya && !fuel){
+    live.innerHTML=`<div class="notice">⚠️ ${lang==="ar"?"أدخل اسم السيارة أو نطاق السعر أو الولاية على الأقل.":"Enter at least a car name, price range, or wilaya."}</div>`;
+    return;
+  }
+  if(minP && maxP && +minP>+maxP){
+    live.innerHTML=`<div class="notice">⚠️ ${lang==="ar"?"الحد الأدنى للسعر أكبر من الحد الأقصى.":"Minimum price is greater than maximum."}</div>`;
+    return;
+  }
+  live.innerHTML=`<div class="notice">${lang==="ar"?"🌐 جارٍ البحث في الإعلانات الحقيقية...":"🌐 Searching real listings..."}</div>`;
+  try{
+    let params=new URLSearchParams();
+    if(q) params.set("q",q);
+    if(minP) params.set("min_price",minP);
+    if(maxP) params.set("max_price",maxP);
+    if(wilaya) params.set("region",wilaya);
+    if(fuel) params.set("fuel",fuel);
+    let r=await fetch("/api/search?"+params.toString(),{headers:{"X-Device-Id":deviceId()}});
+    let d=await r.json();
+    if(r.status===402 || d.need_premium){
+      live.innerHTML=`<div class="notice">🔒 ${d.error|| (lang==="ar"?"هذه الميزة تتطلب Premium.":"Premium required.")}</div>`;
+      openPremiumModal();
+      return;
+    }
+    if(!r.ok || d.ok===false) throw new Error(d.error||("HTTP "+r.status));
+    if(!d.ads||!d.ads.length){
+      live.innerHTML=`<div class="notice">${lang==="ar"?"لم نجد إعلانات مطابقة. جرّب توسيع النطاق أو إزالة بعض الفلاتر.":"No matching listings. Try widening filters."}</div>`;
+      return;
+    }
+    let bits=[];
+    if(d.min_price!=null||d.max_price!=null) bits.push((d.min_price??"—")+" – "+(d.max_price??"—")+" M");
+    if(wilaya){const opt=$("searchWilaya")?.selectedOptions?.[0]; if(opt) bits.push(opt.textContent);}
+    if(fuel) bits.push(fuel);
+    let extra=bits.length?(lang==="ar"?" | ":" | ")+bits.join(" · "):"";
+    let header=lang==="ar"
+      ?`<div class="notice good">✅ ${d.ads.length} إعلان حقيقي${q?" لـ «"+q+"»":""}${extra}</div>`
+      :`<div class="notice good">✅ ${d.ads.length} real listing${d.ads.length===1?"":"s"}${q?" for «"+q+"»":""}${extra}</div>`;
+    live.innerHTML=header+d.ads.map(a=>`<div class="result"><b>${a.title||""}</b><br>
+      ${a.price!=null?`<span class="pill">${a.price} M</span>`:""}
+      ${a.km!=null?`<span class="pill">${Number(a.km).toLocaleString()} km</span>`:""}
+      ${a.year?`<span class="pill">${a.year}</span>`:""}
+      ${a.location?`<span class="pill">${a.location}</span>`:""}
+      <br><a href="${a.url}" target="_blank" rel="noopener" style="color:#c9d83b">${lang==="ar"?"فتح الإعلان ↗":"Open listing ↗"}</a>
+    </div>`).join("");
+  }catch(e){
+    live.innerHTML=`<div class="notice">⚠️ ${lang==="ar"?"تعذر الوصول إلى المصدر الآن.":"Could not reach the source right now."} <small>(${String(e.message||e)})</small></div>`;
+  }
+}
+
+// ---- Freemium ----
+function deviceId(){
+  let id=localStorage.getItem("fahas_did");
+  if(!id){id="D"+Math.random().toString(36).slice(2)+Date.now().toString(36);localStorage.setItem("fahas_did",id);}
+  return id;
+}
+function apiHeaders(){return {"Content-Type":"application/json","X-Device-Id":deviceId()};}
+let PLAN={premium:false,remaining_free:2,single_credits:0,daily_used:0,paid_access:false,features_until:null};
+function hasPaidAccess(){
+  return !!(PLAN.premium || PLAN.paid_access || (PLAN.single_credits>0) || PLAN.features_until);
+}
+
+async function refreshPlan(){
+  try{
+    const r=await fetch("/api/plan",{headers:apiHeaders()});
+    const d=await r.json();
+    if(!d.ok) return;
+    PLAN=d;
+    const badge=$("planBadge");
+    if(!badge) return;
+    if(d.premium){
+      badge.className="plan-badge prem";
+      badge.textContent="💎 Premium"+(d.expires?" · حتى "+String(d.expires).slice(0,10):"");
+    }else if(d.single_credits>0){
+      badge.className="plan-badge prem";
+      badge.textContent="🎫 رصيد تحليل: "+d.single_credits;
+    }else if(d.paid_access || d.features_until){
+      badge.className="plan-badge prem";
+      badge.textContent="✅ مزايا مدفوعة"+(d.features_until?" · حتى "+String(d.features_until).slice(0,10):"");
+    }else{
+      badge.className="plan-badge free";
+      const left=d.remaining_free!=null?d.remaining_free:Math.max(0,(d.daily_limit||2)-(d.daily_used||0));
+      badge.textContent="مجاني · متبقي اليوم: "+left+"/"+(d.daily_limit||2);
+    }
+  }catch(e){}
+}
+function openPremiumModal(){const m=$("premiumModal");if(m)m.style.display="flex";}
+function openActivateModal(){const m=$("activateModal");if(m)m.style.display="flex";}
+function closeModals(){["premiumModal","activateModal"].forEach(id=>{const m=$(id);if(m)m.style.display="none";});}
+
+async function startPay(plan){
+  const st=$("payStatus");
+  if(st) st.textContent="جارٍ إنشاء رابط الدفع عبر Chargily...";
+  try{
+    const r=await fetch("/api/pay/create",{method:"POST",headers:apiHeaders(),body:JSON.stringify({plan})});
+    const d=await r.json();
+    if(!d.ok){
+      if(d.fallback==="activation_code"){
+        if(st) st.textContent="Chargily غير مضبوط على السيرفر. استخدم رمز التفعيل أو اضبط CHARGILY_SECRET_KEY.";
+        return;
+      }
+      throw new Error(d.error||"فشل إنشاء الدفع");
+    }
+    if(st) st.textContent="جاري التحويل إلى صفحة الدفع...";
+    window.location.href=d.checkout_url;
+  }catch(e){
+    if(st) st.textContent="⚠️ "+(e.message||e);
+  }
+}
+// بعد العودة من الدفع
+if(localStorage.getItem("fahas_pay_ok")){
+  localStorage.removeItem("fahas_pay_ok");
+  setTimeout(()=>refreshPlan(),500);
+}
+
+async function activateCode(){
+  const code=($("activateCode")?.value||"").trim();
+  const st=$("activateStatus");
+  if(!code){if(st)st.textContent="أدخل الرمز";return;}
+  if(st)st.textContent="جارٍ التفعيل...";
+  try{
+    const r=await fetch("/api/activate",{method:"POST",headers:apiHeaders(),body:JSON.stringify({code})});
+    const d=await r.json();
+    if(!d.ok) throw new Error(d.error||"فشل");
+    if(st)st.textContent="✅ تم التفعيل بنجاح";
+    await refreshPlan();
+    setTimeout(closeModals,800);
+  }catch(e){if(st)st.textContent="⚠️ "+(e.message||e);}
+}
+async function consumeAnalysis(){
+  const r=await fetch("/api/consume_analysis",{method:"POST",headers:apiHeaders()});
+  const d=await r.json().catch(()=>({}));
+  await refreshPlan();
+  if(r.status===402 || d.allowed===false){
+    openPremiumModal();
+    throw new Error(d.error||"انتهى الحد المجاني لليوم");
+  }
+  if(!d.ok && !d.allowed) throw new Error(d.error||"تعذر التحقق من الحصة");
+  return d;
+}
+function sellerQuestionsHtml(lang){
+  const title=lang==="ar"?"❓ أسئلة يُفضَّل طرحها على صاحب الإعلان":"❓ Questions to ask the seller";
+  const qs=lang==="ar"?[
+    "هل السيارة لها وثائق أصلية كاملة (بطاقة رمادية، تأمين، محضر معاينة)؟",
+    "هل تعرضت لحادث؟ وهل يوجد إصلاحات في الهيكل أو المحرك؟",
+    "ما سبب البيع؟ ومتى كان آخر تغيير لزيت المحرك والسيور؟",
+    "هل يمكن فحص السيارة عند ميكانيكي قبل الاتفاق؟",
+    "هل السعر قابل للتفاوض؟ وهل يوجد مجال للمعاينة في وضح النهار؟"
+  ]:[
+    "Are all original documents available (registration, insurance, inspection)?",
+    "Has the car been in an accident? Any body or engine repairs?",
+    "Why are you selling? When were oil and belts last changed?",
+    "Can a mechanic inspect the car before we agree?",
+    "Is the price negotiable? Can we view it in daylight?"
+  ];
+  return `<div class="notice good"><b>${title}</b><ol style="margin:8px 0 0 22px;line-height:1.85">${qs.map(q=>`<li>${q}</li>`).join("")}</ol></div>`;
+}
+function anomaliesHtml(list,lang){
+  if(!list||!list.length) return "";
+  const title=lang==="ar"?"⚠️ ملاحظات وكشف تناقضات (Premium)":"⚠️ Anomalies (Premium)";
+  return `<div class="notice"><b>${title}</b><ul style="margin:8px 0 0 18px">${list.map(a=>`<li>${a.text||a}</li>`).join("")}</ul></div>`;
+}
+function saveReportBtn(htmlId){
+  return `<button type="button" class="secondary" style="width:auto;margin-top:10px" onclick="downloadReport()">📄 حفظ التقرير</button>`;
+}
+function downloadReport(){
+  const rep=$("report");
+  if(!rep) return;
+  const text=rep.innerText||"";
+  const blob=new Blob([text],{type:"text/plain;charset=utf-8"});
+  const a=document.createElement("a");
+  a.href=URL.createObjectURL(blob);
+  a.download="FaheS-report-"+new Date().toISOString().slice(0,10)+".txt";
+  a.click();
+}
+
+apply();
+async function loadWilayas(){
+  const sel=$("searchWilaya"); if(!sel) return;
+  try{
+    const r=await fetch("/api/wilayas"); const d=await r.json();
+    if(!d.ok||!d.wilayas) return;
+    d.wilayas.forEach(w=>{
+      const o=document.createElement("option");
+      o.value=w.id; o.textContent=w.id+" - "+w.name;
+      sel.appendChild(o);
+    });
+  }catch(e){}
+}
+loadWilayas();
+refreshPlan();
+</script>
+
+
+<script>
+(function(){
+  const btn=document.getElementById("urlAnalyzeBtn");
+  const input=document.getElementById("adUrl");
+  const status=document.getElementById("urlStatus");
+  if(!btn || !input) return;
+  btn.addEventListener("click", async function(){
+    const url=input.value.trim();
+    if(!url){ status.textContent="ضع رابط الإعلان أولاً."; return; }
+    btn.disabled=true;
+    status.textContent="جارٍ قراءة الإعلان...";
+    try{
+      const r=await fetch("/api/analyze_url",{
+        method:"POST",
+        headers:{"Content-Type":"application/json"},
+        body:JSON.stringify({url:url})
+      });
+      const d=await r.json();
+      if(!d.ok) throw new Error(d.error || "تعذر قراءة الإعلان");
+      const ids=["brand","model","trim","year","engine","fuel","gear","km","price"]; ids.forEach(id=>{const e=document.getElementById(id); if(e) e.value="";});
+      const set=(id,v)=>{const e=document.getElementById(id); if(e && v!==undefined && v!==null) e.value=v;};
+      set("brand",d.brand); set("model",d.model); set("trim",d.trim);
+      set("year",d.year); set("engine",d.engine); set("fuel",d.fuel); set("gear",d.gear);
+      set("km",d.km); set("price",d.price);
+      const n=(d.similar_ads||[]).length;
+      status.innerHTML=`<span style="color:#c9d83b;font-weight:700">✅ تمت قراءة الإعلان الحالي</span><br>السيارة: ${d.brand||"—"} ${d.model||"—"} ${d.trim||""} — ${d.year||"—"}<br>المحرك: ${d.engine||"—"} | الطاقة: ${d.fuel||"—"} | ناقل الحركة: ${d.gear||"—"}<br>السعر: ${d.price||"—"} مليون | الكيلومترات: ${d.km||"—"} km<br>رقم الإعلان: ${d.ad_id||"—"} | التاريخ: ${d.date||"—"} | الزيارات: ${d.views||"—"}<br>الموقع: ${d.location||"—"}<br>إعلانات مماثلة موجودة داخل الصفحة: ${n}`;
+    }catch(e){
+      status.textContent="⚠️ "+(e.message||e);
+    }finally{ btn.disabled=false; }
+  });
+})();
+</script>
+</body></html>

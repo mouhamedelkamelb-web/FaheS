@@ -117,8 +117,15 @@ def gql(query, variables=None, timeout=30):
     if m:
         payload["operationName"] = m.group(1)
     r = requests.post(GRAPHQL, json=payload, headers=GQL_HEADERS, timeout=timeout)
-    r.raise_for_status()
-    data = r.json()
+    if r.status_code >= 400:
+        raise requests.RequestException(f"HTTP {r.status_code}")
+    body = (r.text or "").strip()
+    if not body:
+        raise requests.RequestException("رد فارغ من Ouedkniss (قد يكون محجوباً من السيرفر)")
+    try:
+        data = r.json()
+    except Exception:
+        raise requests.RequestException("Ouedkniss لم يُرجع بيانات JSON صالحة (حجب أو حماية)")
     if data.get("errors"):
         msg = data["errors"][0].get("message", "GraphQL error")
         raise requests.RequestException(msg)
@@ -208,15 +215,70 @@ def _price_from_ann(ann):
     return None
 
 
+def _extract_listing_html(url, ad_id):
+    """Fallback when GraphQL is blocked: parse public HTML page."""
+    r = requests.get(url, headers=HEADERS, timeout=25)
+    if r.status_code >= 400:
+        raise requests.RequestException(f"HTTP {r.status_code} عند فتح صفحة الإعلان")
+    html = r.text or ""
+    if not html.strip():
+        raise requests.RequestException("صفحة الإعلان فارغة")
+    soup = BeautifulSoup(html, "html.parser")
+    title = clean(soup.title.get_text() if soup.title else "")
+    # try og:title
+    og = soup.find("meta", property="og:title")
+    if og and og.get("content"):
+        title = clean(og.get("content")) or title
+    desc = ""
+    md = soup.find("meta", attrs={"name": "description"}) or soup.find("meta", property="og:description")
+    if md and md.get("content"):
+        desc = clean(md.get("content"))
+    text_blob = " ".join([title, desc, clean(soup.get_text(" ", strip=True))[:2000]])
+    brand, model, trim, year = title_fields(title, url)
+    price_val = parse_price(text_blob)
+    km_val = parse_km(text_blob)
+    return {
+        "ok": True,
+        "url": url,
+        "title": title,
+        "brand": brand,
+        "model": model,
+        "trim": trim,
+        "year": str(year) if year else "",
+        "engine": "",
+        "fuel": "",
+        "gear": "",
+        "km": str(km_val) if km_val is not None else "",
+        "price": str(round(price_val, 2)) if price_val is not None else "",
+        "ad_id": str(ad_id),
+        "date": "",
+        "views": "",
+        "location": "",
+        "description": desc,
+        "images": [],
+        "similar_ads": [],
+        "source_mode": "html_fallback",
+    }
+
+
 def extract_listing(url):
     ad_id = extract_ad_id(url)
     if not ad_id:
         raise ValueError("رابط إعلان غير صالح — لم يتم العثور على رقم الإعلان")
 
-    data = gql(ANN_QUERY, {"id": str(ad_id)})
-    ann = data.get("announcement")
-    if not ann:
-        raise requests.RequestException("تعذر العثور على الإعلان")
+    try:
+        data = gql(ANN_QUERY, {"id": str(ad_id)})
+        ann = data.get("announcement")
+        if not ann:
+            raise requests.RequestException("تعذر العثور على الإعلان")
+    except Exception as gql_err:
+        # GraphQL often blocked from cloud hosts; try public HTML page
+        try:
+            return _extract_listing_html(url, ad_id)
+        except Exception:
+            raise requests.RequestException(
+                f"{gql_err}. إن استمر الفشل: املأ الحقول يدوياً ثم اضغط تحليل الإعلان."
+            )
 
     specs = _spec_map(ann.get("specs"))
     title = clean(ann.get("title") or "")
@@ -364,6 +426,68 @@ def _ann_to_ad(ann):
     }
 
 
+
+def fetch_search_html(query, limit=60, min_price=None, max_price=None):
+    """Fallback search by scraping public Ouedkniss HTML when GraphQL is blocked."""
+    out, seen = [], set()
+    q = (query or "").strip()
+    if not q:
+        return out
+    urls = [
+        f"{BASE}/automobiles_voiture?keywords={quote_plus(q)}",
+        f"{BASE}/s/automobiles-voitures?q={quote_plus(q)}",
+        f"{BASE}/automobiles_voiture/{quote_plus(q)}",
+    ]
+    for url in urls:
+        try:
+            r = requests.get(url, headers=HEADERS, timeout=25)
+            if r.status_code >= 400 or not (r.text or "").strip():
+                continue
+            soup = BeautifulSoup(r.text, "html.parser")
+            for a in soup.find_all("a", href=True):
+                href = a.get("href") or ""
+                if not re.search(r"-d\d{5,}|/d\d{5,}", href, re.I):
+                    continue
+                full = href if href.startswith("http") else urljoin(BASE + "/", href.lstrip("/"))
+                if full in seen:
+                    continue
+                title = clean(a.get_text(" ", strip=True))
+                if len(title) < 6:
+                    parent = a.find_parent(["article", "div", "li"])
+                    if parent:
+                        title = clean(parent.get_text(" ", strip=True))[:200] or title
+                if len(title) < 6:
+                    continue
+                price = parse_price(title)
+                if price is None and a.parent:
+                    price = parse_price(a.parent.get_text(" ", strip=True)[:300])
+                if price is None:
+                    continue
+                if min_price is not None and price < float(min_price) * 0.9:
+                    continue
+                if max_price is not None and price > float(max_price) * 1.1:
+                    continue
+                if price < 15 or price > 2000:
+                    continue
+                year = parse_year(title)
+                km = parse_km(title)
+                seen.add(full)
+                out.append({
+                    "title": title[:900],
+                    "url": full,
+                    "price": price,
+                    "year": year,
+                    "km": km,
+                })
+                if len(out) >= limit:
+                    return out
+            if len(out) >= min(8, limit):
+                break
+        except Exception:
+            continue
+    return out
+
+
 def fetch_search(query, limit=60, min_price=None, max_price=None, region_id=None, fuel=None):
     """Search real Ouedkniss vehicle listings via GraphQL.
 
@@ -392,6 +516,35 @@ def fetch_search(query, limit=60, min_price=None, max_price=None, region_id=None
 
     fuel_key = (fuel or "").lower().strip()
     q = (query or "").strip()
+
+    graphql_ok = True
+    try:
+        # probe one page first
+        gql(SEARCH_QUERY, {
+            "q": q or None,
+            "filter": {
+                "categorySlug": "automobiles-voitures",
+                "origin": None,
+                "connected": False,
+                "delivery": None,
+                "regionIds": [],
+                "cityIds": [],
+                "priceRange": [None, None],
+                "exchange": None,
+                "hasPictures": False,
+                "hasPrice": True,
+                "priceUnit": None,
+                "fields": [],
+                "page": 1,
+                "orderByField": {"field": "REFRESHED_AT"},
+                "count": 5,
+            },
+        })
+    except Exception:
+        graphql_ok = False
+
+    if not graphql_ok:
+        return fetch_search_html(query, limit=limit, min_price=min_price, max_price=max_price)
 
     for cat in categories:
         for page in range(1, pages_needed + 1):
@@ -452,6 +605,14 @@ def fetch_search(query, limit=60, min_price=None, max_price=None, region_id=None
                     return out
         if len(out) >= min(10, limit):
             break
+    if len(out) < 3:
+        html_ads = fetch_search_html(query, limit=limit, min_price=min_price, max_price=max_price)
+        for ad in html_ads:
+            if ad.get("url") and ad["url"] not in seen:
+                seen.add(ad["url"])
+                out.append(ad)
+                if len(out) >= limit:
+                    break
     return out
 
 
@@ -688,7 +849,9 @@ def _valuation_impl():
     exact, nearby, wider = [], [], []
     model_l = norm(model).lower().strip()
     brand_l = norm(brand).lower().strip()
-    model_parts = [p for p in re.split(r"\s+", model_l) if len(p) > 2]
+    model_parts = [p for p in re.split(r"\s+", model_l) if len(p) >= 2]
+    if model_l and model_l not in model_parts:
+        model_parts.insert(0, model_l)
 
     for ad in all_ads:
         title = norm(ad.get("title", "")).lower()
@@ -707,20 +870,22 @@ def _valuation_impl():
                 ay_i = None
         if y and ay_i is not None:
             delta = abs(ay_i - y)
+            # Newer models (e.g. 2025/2026) are rare: accept wider year span
+            near_max, wide_max = (4, 8) if y >= datetime.utcnow().year - 1 else (2, 5)
             if delta == 0:
                 exact.append(ad)
-            elif delta <= 2:
+            elif delta <= near_max:
                 nearby.append(ad)
-            elif delta <= 5:
+            elif delta <= wide_max:
                 wider.append(ad)
         else:
             wider.append(ad)
 
-    if len(exact) >= 4:
+    if len(exact) >= 3:
         selected = exact
         tier = "same_year"
         tier_text = "نفس الماركة والموديل والسنة" if request.args.get("lang", "ar") == "ar" else "same brand, model and year"
-    elif len(exact) + len(nearby) >= 4:
+    elif len(exact) + len(nearby) >= 3:
         selected = exact + nearby
         tier = "nearby_years"
         tier_text = "نفس الماركة والموديل، وسنوات قريبة" if request.args.get("lang", "ar") == "ar" else "same brand/model with nearby years"
@@ -731,7 +896,7 @@ def _valuation_impl():
     else:
         selected = exact + nearby + wider
         tier = "insufficient"
-        tier_text = "بيانات غير كافية" if request.args.get("lang", "ar") == "ar" else "insufficient data"
+        tier_text = "بيانات غير كافية — جرّب سنة أقدم قليلاً أو تأكد أن Ouedkniss يصل من السيرفر" if request.args.get("lang", "ar") == "ar" else "insufficient data"
 
     st = stats(selected)
     if not st or st["count"] < 3:
@@ -1559,4 +1724,6 @@ def pay_status():
 
 
 if __name__ == "__main__":
-    app.run(host="127.0.0.1", port=5050, debug=False)
+    import os
+    port = int(os.environ.get("PORT", "5050"))
+    app.run(host="0.0.0.0", port=port, debug=False)

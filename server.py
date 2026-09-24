@@ -27,7 +27,7 @@ GQL_HEADERS = {
 }
 
 AR_DIGITS = str.maketrans("٠١٢٣٤٥٦٧٨٩٬٫", "0123456789,.")
-BRANDS = ["kia","hyundai","chevrolet","renault","peugeot","seat","volkswagen","skoda","toyota","dacia","fiat","ford","opel","nissan","suzuki","chery","geely","changan","jetour","mg","citroen","mercedes","bmw","audi"]
+BRANDS = ["gac","kia","hyundai","chevrolet","renault","peugeot","seat","volkswagen","skoda","toyota","dacia","fiat","ford","opel","nissan","suzuki","chery","geely","changan","jetour","mg","citroen","mercedes","bmw","audi"]
 
 BIDI_CHARS = "\u200e\u200f\u202a\u202b\u202c\u202d\u202e\u2066\u2067\u2068\u2069\ufeff"
 
@@ -215,28 +215,135 @@ def _price_from_ann(ann):
     return None
 
 
+def _fields_from_ouedkniss_url(url):
+    """Parse brand/model/year/trim from typical Ouedkniss car URLs."""
+    path = re.sub(r"^https?://(?:www\.)?ouedkniss\.com/", "", url or "", flags=re.I)
+    path = path.split("?")[0].strip("/")
+    # remove trailing -d123456
+    path = re.sub(r"-d\d{5,}$", "", path, flags=re.I)
+    parts = [p for p in re.split(r"[-_/]+", path) if p]
+    # drop category tokens
+    skip = {"voitures", "voiture", "automobiles", "automobile", "algerie", "alger", "dz"}
+    parts = [p for p in parts if p.lower() not in skip]
+    blob = " ".join(parts)
+    brand, model, trim, year = title_fields(blob, path)
+    # if brand still empty, first token may be brand
+    if not brand and parts:
+        cand = parts[0]
+        for b in BRANDS:
+            if cand.lower() == b or b.startswith(cand.lower()):
+                brand = b.title()
+                break
+        if not brand and cand.isalpha() and len(cand) >= 2:
+            brand = cand.title()
+    # model: tokens after brand until year
+    if brand and not model:
+        low = [p.lower() for p in parts]
+        try:
+            bi = next(i for i, p in enumerate(low) if p == brand.lower() or brand.lower().startswith(p))
+            rest = parts[bi + 1 :]
+        except StopIteration:
+            rest = parts[1:]
+        buf = []
+        for p in rest:
+            if re.fullmatch(r"20\d{2}|19\d{2}", p):
+                break
+            if p.lower() in {"r", "style", "full", "option", "options", "plus", "line"}:
+                if not trim:
+                    trim = p
+                continue
+            buf.append(p)
+            if len(buf) >= 3:
+                break
+        if buf:
+            model = clean(" ".join(buf))
+    if not year:
+        ym = re.search(r"\b(20\d{2}|19\d{2})\b", path)
+        if ym:
+            year = ym.group(1)
+    # location: last non-year tokens often city/wilaya — skip for fields
+    return brand, model, trim, year
+
+
 def _extract_listing_html(url, ad_id):
-    """Fallback when GraphQL is blocked: parse public HTML page."""
-    r = requests.get(url, headers=HEADERS, timeout=25)
-    if r.status_code >= 400:
-        raise requests.RequestException(f"HTTP {r.status_code} عند فتح صفحة الإعلان")
-    html = r.text or ""
-    if not html.strip():
-        raise requests.RequestException("صفحة الإعلان فارغة")
-    soup = BeautifulSoup(html, "html.parser")
-    title = clean(soup.title.get_text() if soup.title else "")
-    # try og:title
-    og = soup.find("meta", property="og:title")
-    if og and og.get("content"):
-        title = clean(og.get("content")) or title
+    """Fallback when GraphQL is blocked: parse public HTML page + URL slug."""
+    brand, model, trim, year = _fields_from_ouedkniss_url(url)
+    title = clean(f"{brand} {model} {year} {trim}".strip())
     desc = ""
-    md = soup.find("meta", attrs={"name": "description"}) or soup.find("meta", property="og:description")
-    if md and md.get("content"):
-        desc = clean(md.get("content"))
-    text_blob = " ".join([title, desc, clean(soup.get_text(" ", strip=True))[:2000]])
-    brand, model, trim, year = title_fields(title, url)
-    price_val = parse_price(text_blob)
-    km_val = parse_km(text_blob)
+    price_val = None
+    km_val = None
+    location = ""
+    try:
+        r = requests.get(url, headers=HEADERS, timeout=25)
+        if r.status_code < 400 and (r.text or "").strip():
+            html = r.text
+            soup = BeautifulSoup(html, "html.parser")
+            if soup.title:
+                title = clean(soup.title.get_text()) or title
+            og = soup.find("meta", property="og:title")
+            if og and og.get("content"):
+                title = clean(og.get("content")) or title
+            md = soup.find("meta", attrs={"name": "description"}) or soup.find("meta", property="og:description")
+            if md and md.get("content"):
+                desc = clean(md.get("content"))
+            # JSON-LD
+            for sc in soup.find_all("script", attrs={"type": "application/ld+json"}):
+                try:
+                    import json as _json
+                    data = _json.loads(sc.string or "")
+                    items = data if isinstance(data, list) else [data]
+                    for it in items:
+                        if not isinstance(it, dict):
+                            continue
+                        if it.get("name"):
+                            title = clean(it.get("name")) or title
+                        offers = it.get("offers") or {}
+                        if isinstance(offers, dict) and offers.get("price") is not None:
+                            try:
+                                price_val = float(str(offers.get("price")).replace(" ", "").replace(",", "."))
+                                if price_val > 10000:
+                                    price_val = price_val / 10000.0  # rough if in DZD
+                            except Exception:
+                                pass
+                except Exception:
+                    pass
+            # __NEXT_DATA__ or similar embedded JSON
+            for sc in soup.find_all("script"):
+                s = sc.string or sc.get_text() or ""
+                if "pricePreview" in s or "announcementDetails" in s or "priceUnit" in s:
+                    m = re.search(r'"pricePreview"\s*:\s*([0-9]+(?:\.[0-9]+)?)', s)
+                    if m and price_val is None:
+                        try:
+                            price_val = float(m.group(1))
+                        except Exception:
+                            pass
+                    m = re.search(r'"title"\s*:\s*"([^"]{8,120})"', s)
+                    if m:
+                        title = clean(m.group(1)) or title
+            text_blob = " ".join([title, desc, clean(soup.get_text(" ", strip=True))[:3000]])
+            b2, m2, t2, y2 = title_fields(title, url)
+            brand = brand or b2
+            model = model or m2
+            trim = trim or t2
+            year = year or y2
+            if price_val is None:
+                price_val = parse_price(text_blob)
+            if km_val is None:
+                km_val = parse_km(text_blob)
+            # location from URL city tokens
+            loc_m = re.search(r"-([a-z]{3,})-([a-z]{3,})-algerie-d\d+", url or "", re.I)
+            if loc_m:
+                location = clean(f"{loc_m.group(1)} - {loc_m.group(2)}").title()
+    except Exception:
+        pass
+    # Always enrich from URL if still missing
+    b3, m3, t3, y3 = _fields_from_ouedkniss_url(url)
+    brand = brand or b3
+    model = model or m3
+    trim = trim or t3
+    year = year or y3
+    if not title or title.lower() in ("", "ouedkniss"):
+        title = clean(f"{brand} {model} {year}".strip()) or f"annonce {ad_id}"
     return {
         "ok": True,
         "url": url,
@@ -253,7 +360,7 @@ def _extract_listing_html(url, ad_id):
         "ad_id": str(ad_id),
         "date": "",
         "views": "",
-        "location": "",
+        "location": location,
         "description": desc,
         "images": [],
         "similar_ads": [],
